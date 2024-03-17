@@ -1,20 +1,41 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
+
 package servidor;
 
-/**
- *
- * @author RSB
- */
+import java.io.DataInputStream;
+import java.io.File;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+
 public class Servidor {
 
-    /**
-     * @param args the command line arguments
-     */
+    static int puerto=4500;
+    
     public static void main(String[] args) {
-        // TODO code application logic here
+        File carpeta= new File("Carpeta remota");
+        if(!carpeta.exists()){
+            if(carpeta.mkdirs()){
+                System.out.println("Directorio creado");
+            }
+        }
+        for(;;){
+            
+            try(ServerSocket ss=new ServerSocket(puerto)){
+                
+                ss.setReuseAddress(true);
+                System.out.println("Servidor iniciado y en espera");
+
+                Socket socket=ss.accept();
+                System.out.println("Cliente conectado");
+                
+                DataInputStream dis=new DataInputStream(socket.getInputStream());
+                
+                System.out.println("la opcion elegida fue: "+dis.readInt()+" "+dis.readLine());
+            }
+            catch(Exception e){
+
+            }
+        }
     }
     
 }
