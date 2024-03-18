@@ -4,6 +4,8 @@ package cliente;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -14,7 +16,7 @@ public class Cliente {
     static String direccion="127.0.0.1";
     static int puerto=4500;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
                 
         
         if(!carpeta.exists()){
@@ -75,26 +77,29 @@ public class Cliente {
         }
     }
     
-    static void listado(int op){
+    static void listado(int op) throws ClassNotFoundException{
         System.out.println("\n");
         if(op==1){
             
            Cliente cliente=new Cliente();
-           cliente.listar(carpeta,0);
+           cliente.listar(carpeta,"");
         }
         else{
-            try(Socket socket=new Socket(direccion, puerto)){
+           try (Socket socket = new Socket(direccion, puerto)) {
                 System.out.println("Servidor conectado");
+
+                int opM = 1;
+
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                oos.writeInt(opM);
+                oos.flush();
                 
-                int opM=1;
+                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                StringBuilder recibido = (StringBuilder) ois.readObject();
+                System.out.println("\n" + recibido);
                 
-                DataOutputStream dos=new DataOutputStream(socket.getOutputStream());
-                dos.writeInt(opM);
-                dos.flush();
-                dos.writeChars("hola");
-            }
-            catch(IOException e){
-                
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         
@@ -128,24 +133,21 @@ public class Cliente {
         return 0;
     }
     
-    void listar(File file, int nivel){
-        File[] lista=file.listFiles();
-        
-        for(File elemento:lista){
-            if(elemento.isFile()){
-                for(int i=0;i<nivel;i++){
-                    System.out.print("    ");
+    public void listar(File directorio, String prefijo) {
+        if (directorio.isDirectory()) {
+            System.out.println(prefijo + "└───" + directorio.getName());
+            File[] archivos = directorio.listFiles();
+            if (archivos != null) {
+                for (int i = 0; i < archivos.length; i++) {
+                    if (i == archivos.length - 1) {
+                        listar(archivos[i], prefijo + "    ");
+                    } else {
+                        listar(archivos[i], prefijo + "    ");
+                    }
                 }
-                System.out.println(elemento.getName());
             }
-            else if(elemento.isDirectory()){
-                for(int i=0;i<nivel;i++){
-                    System.out.print("    ");
-                }
-                System.out.println(elemento.getName());
-                int n=nivel+1;
-                listar(elemento,n);
-            }
+        } else {
+            System.out.println(prefijo + "├───" + directorio.getName());
         }
     }
 }
