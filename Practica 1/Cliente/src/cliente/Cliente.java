@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 
@@ -105,14 +106,72 @@ public class Cliente {
         
     }
     
-    static void borrado(int op){
+    static void borrado(int op) throws ClassNotFoundException{
         if(op==1){
-            System.out.println("\nLocal\n");
+            Cliente cliente=new Cliente();
+            cliente.borradoOp(carpeta);
         }
         else{
             System.out.println("\nRemoto\n");
         }
         
+    }
+    
+    public void listar(File directorio, String prefijo) {
+        if (directorio.isDirectory()) {
+            System.out.println(prefijo + "└───" + directorio.getName());
+            File[] archivos = directorio.listFiles();
+            if (archivos != null) {
+                for (int i = 0; i < archivos.length; i++) {
+                    if (i == archivos.length - 1) {
+                        listar(archivos[i], prefijo + "    ");
+                    } else {
+                        listar(archivos[i], prefijo + "    ");
+                    }
+                }
+            }
+        } else {
+            System.out.println(prefijo + "├───" + directorio.getName());
+        }
+    }
+    
+    public void borradoOp(File carpeta) throws ClassNotFoundException{
+        File[] lista=carpeta.listFiles();
+        
+        System.out.println("\nSe encuentra en: "+carpeta.getName()+"\n");
+        
+        System.out.print("\nQuiere eliminar algun archivo o carpeta de este directorio [s/n]:");
+        if(new Scanner(System.in).nextLine().equals("s")){
+            for(int i=0;i<lista.length;i++){
+                System.out.println((i+1)+"-. "+lista[i].getName());
+            }
+        }
+        else{
+            System.out.print("\nQuiere entrar a un directorio [s/n]:");
+            
+            ArrayList<File> directorios=new ArrayList();
+            
+            if(new Scanner(System.in).nextLine().equals("s")){
+                int j=0;
+                for(int i=0;i<lista.length;i++){
+                    if(lista[i].isDirectory()){
+                        j++;
+                        directorios.add(lista[i]);
+                        System.out.println(j+"-. "+lista[i].getName());
+                    }
+                }
+                
+                System.out.print("\nIngrese numero del directorio que desea ingresar: ");
+                int t=verificarNumero(j);
+                if(t!=0)
+                    borradoOp(directorios.get(t-1));
+                
+            }
+            else{
+                System.out.print("\nRegresando al menu\nPresione un tecla para continuar");
+                new Scanner(System.in).nextLine();
+            }
+        }
     }
     
     static int verificarNumero(int limite){
@@ -133,21 +192,4 @@ public class Cliente {
         return 0;
     }
     
-    public void listar(File directorio, String prefijo) {
-        if (directorio.isDirectory()) {
-            System.out.println(prefijo + "└───" + directorio.getName());
-            File[] archivos = directorio.listFiles();
-            if (archivos != null) {
-                for (int i = 0; i < archivos.length; i++) {
-                    if (i == archivos.length - 1) {
-                        listar(archivos[i], prefijo + "    ");
-                    } else {
-                        listar(archivos[i], prefijo + "    ");
-                    }
-                }
-            }
-        } else {
-            System.out.println(prefijo + "├───" + directorio.getName());
-        }
-    }
 }

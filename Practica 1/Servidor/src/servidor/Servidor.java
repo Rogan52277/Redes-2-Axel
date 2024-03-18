@@ -37,10 +37,11 @@ public class Servidor {
 
                 switch (opM){
                     case 1:{
-                        ObjectOutputStream mandar = new ObjectOutputStream(socket.getOutputStream());
+                        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                         StringBuilder listado=new StringBuilder();
-                        mandar.writeObject(new Servidor().listar(carpeta, "",listado));
-                        mandar.flush();
+                        oos.writeObject(new Servidor().listar(carpeta, "",listado));
+                        oos.flush();
+                        oos.close();
                         break;
                     }
                     case 2:{
@@ -65,11 +66,8 @@ public class Servidor {
                         break;
                     }
                 }
-
-
-                /*ObjectOutputStream mandar = new ObjectOutputStream(socket.getOutputStream());
-                mandar.writeObject(carpeta);
-                mandar.flush();*/
+                ois.close();
+                
             } catch (IOException e) {
                 e.printStackTrace();
             }
