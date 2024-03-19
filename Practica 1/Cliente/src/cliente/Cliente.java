@@ -145,7 +145,27 @@ public class Cliente {
             for(int i=0;i<lista.length;i++){
                 System.out.println((i+1)+"-. "+lista[i].getName());
             }
+            
+            System.out.print("\nIngrese numero del archivo o carpeta que desea eliminar: ");
+            int t=verificarNumero(lista.length);
+            if(t!=0){
+                System.out.print("\nSeguro quiere eliminar "+lista[t-1]+" [s/n]:");
+                if(new Scanner(System.in).nextLine().equals("s")){
+                    if(lista[t-1].isDirectory()){
+                        eliminarDirectorio(lista[0]);
+                    }
+                    else{
+                        eliminarArchivo(lista[0]);
+                    }
+                }
+                else{
+                    System.out.print("\nRegresando al menu\nPresione un tecla para continuar");
+                    new Scanner(System.in).nextLine();
+                }
+            }
+            
         }
+        /////Entrar a directorio
         else{
             System.out.print("\nQuiere entrar a un directorio [s/n]:");
             
@@ -159,6 +179,7 @@ public class Cliente {
                         directorios.add(lista[i]);
                         System.out.println(j+"-. "+lista[i].getName());
                     }
+                    
                 }
                 
                 System.out.print("\nIngrese numero del directorio que desea ingresar: ");
@@ -167,12 +188,41 @@ public class Cliente {
                     borradoOp(directorios.get(t-1));
                 
             }
+            //////Salir
             else{
                 System.out.print("\nRegresando al menu\nPresione un tecla para continuar");
                 new Scanner(System.in).nextLine();
             }
         }
     }
+    
+    public static void eliminarArchivo(File archivo) {
+        if (archivo.delete()) {
+            System.out.println("Archivo eliminado: " + archivo.getAbsolutePath());
+        } else {
+            System.out.println("No se pudo eliminar el archivo: " + archivo.getAbsolutePath());
+        }
+    }
+
+    public static void eliminarDirectorio(File directorio) {
+        File[] archivos = directorio.listFiles();
+        if (archivos != null) {
+            for (File archivo : archivos) {
+                if (archivo.isDirectory()) {
+                    eliminarDirectorio(archivo);
+                } else {
+                    eliminarArchivo(archivo);
+                }
+            }
+        }
+        
+        if (directorio.delete()) {
+            System.out.println("Directorio eliminado: " + directorio.getAbsolutePath());
+        } else {
+            System.out.println("No se pudo eliminar el directorio: " + directorio.getAbsolutePath());
+        }
+    }
+
     
     static int verificarNumero(int limite){
         try{
