@@ -1,7 +1,7 @@
 
 package cliente;
 
-import java.io.DataOutputStream;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -100,7 +100,6 @@ public class Cliente {
                 System.out.println("\n" + recibido);
                 
             } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
             }
         }
         
@@ -130,8 +129,9 @@ public class Cliente {
                     }
                 }
             }
-        } else {
-            System.out.println(prefijo + "├───" + directorio.getName());
+        } 
+        else {
+            System.out.println(prefijo + "├───" + directorio.getName()+permisos(directorio));
         }
     }
     
@@ -143,7 +143,7 @@ public class Cliente {
         System.out.print("\nQuiere eliminar algun archivo o carpeta de este directorio [s/n]:");
         if(new Scanner(System.in).nextLine().equals("s")){
             for(int i=0;i<lista.length;i++){
-                System.out.println((i+1)+"-. "+lista[i].getName());
+                System.out.println((i+1)+"-. "+lista[i].getName()+permisos(lista[i]));
             }
             
             System.out.print("\nIngrese numero del archivo o carpeta que desea eliminar: ");
@@ -152,10 +152,15 @@ public class Cliente {
                 System.out.print("\nSeguro quiere eliminar "+lista[t-1]+" [s/n]:");
                 if(new Scanner(System.in).nextLine().equals("s")){
                     if(lista[t-1].isDirectory()){
-                        eliminarDirectorio(lista[0]);
+                        eliminarDirectorio(lista[t-1]);
                     }
                     else{
-                        eliminarArchivo(lista[0]);
+                        if(lista[0].canWrite()){
+                            eliminarArchivo(lista[t-1]);
+                        }
+                        else{
+                            System.out.println("No se puede eliminar por permiso de escritura");
+                        }
                     }
                 }
                 else{
@@ -173,13 +178,12 @@ public class Cliente {
             
             if(new Scanner(System.in).nextLine().equals("s")){
                 int j=0;
-                for(int i=0;i<lista.length;i++){
-                    if(lista[i].isDirectory()){
+                for (File lista1 : lista) {
+                    if (lista1.isDirectory()) {
                         j++;
-                        directorios.add(lista[i]);
-                        System.out.println(j+"-. "+lista[i].getName());
+                        directorios.add(lista1);
+                        System.out.println(j+"-. " + lista1.getName());
                     }
-                    
                 }
                 
                 System.out.print("\nIngrese numero del directorio que desea ingresar: ");
@@ -197,10 +201,11 @@ public class Cliente {
     }
     
     public static void eliminarArchivo(File archivo) {
+        
         if (archivo.delete()) {
-            System.out.println("Archivo eliminado: " + archivo.getAbsolutePath());
+            System.out.println("Archivo eliminado: " + archivo.getName());
         } else {
-            System.out.println("No se pudo eliminar el archivo: " + archivo.getAbsolutePath());
+            System.out.println("No se pudo eliminar el archivo: " + archivo.getName());
         }
     }
 
@@ -210,8 +215,15 @@ public class Cliente {
             for (File archivo : archivos) {
                 if (archivo.isDirectory()) {
                     eliminarDirectorio(archivo);
-                } else {
-                    eliminarArchivo(archivo);
+                }
+                else {
+                    if(archivo.canWrite()){
+                        eliminarArchivo(archivo);
+                    }
+                    else{
+                        System.out.println("No se puede eliminar por permiso de escritura");
+                        break;
+                    }
                 }
             }
         }
@@ -221,8 +233,15 @@ public class Cliente {
         } else {
             System.out.println("No se pudo eliminar el directorio: " + directorio.getAbsolutePath());
         }
+        new Scanner(System.in).nextLine();
     }
 
+    static String permisos(File file){
+        String execute=file.canExecute() && file.isFile()?"x":"-";
+        String read=file.canExecute()  && file.isFile()?"r":"-";
+        String write=file.canWrite()  && file.isFile()?"w":"-";
+        return file.isDirectory()?"":" - "+read+write+execute;
+    }
     
     static int verificarNumero(int limite){
         try{

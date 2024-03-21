@@ -89,10 +89,17 @@ public class Servidor {
                     }
                 }
             }
-        } else {
-            System.out.println(prefijo + "├───" + directorio.getName());
-            listado.append(prefijo).append("├───").append(directorio.getName()).append("\n");
+        }
+        else {
+            System.out.println(prefijo + "├───" + directorio.getName()+permisos(directorio));
+            listado.append(prefijo).append("├───").append(directorio.getName()).append(permisos(directorio)).append("\n");
         }
         return listado;
+    }
+    static String permisos(File file){
+        String execute=file.canExecute() && file.isFile()?"x":"-";
+        String read=file.canExecute()  && file.isFile()?"r":"-";
+        String write=file.canWrite()  && file.isFile()?"w":"-";
+        return file.isDirectory()?"":" - "+read+write+execute;
     }
 }
