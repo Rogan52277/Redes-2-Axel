@@ -2,6 +2,7 @@
 package cliente;
 
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -9,6 +10,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.swing.JFileChooser;
 
 
 public class Cliente {
@@ -23,6 +25,7 @@ public class Cliente {
         if(!carpeta.exists()){
             if(carpeta.mkdirs()){
                 System.out.println("Directorio local creado");
+                
             }
         }
         boolean salida=true;
@@ -100,6 +103,7 @@ public class Cliente {
                 System.out.println("\n" + recibido);
                 
             } catch (IOException | ClassNotFoundException e) {
+                System.out.println("No ha se ha podido conectar al servidor");
             }
         }
         
@@ -111,13 +115,63 @@ public class Cliente {
             cliente.borradoOp(carpeta);
         }
         else{
-            System.out.println("\nRemoto\n");
+            try (Socket socket = new Socket(direccion, puerto)) {
+                int opM = 2;
+
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                
+                oos.writeInt(opM);
+                oos.flush();
+                
+                ObjectInputStream ois=new ObjectInputStream(socket.getInputStream());
+                
+                borradoServidor(socket,ois);
+                
+            } catch (IOException e) {
+                System.out.println("No ha se ha podido conectar al servidor");
+            }
+        }
+        
+    }
+    
+    public static void borradoServidor(Socket socket,ObjectInputStream ois) throws IOException, ClassNotFoundException{
+        
+        Object objeto=new Object();
+        objeto=ois.readObject();
+        
+        if(objeto instanceof StringBuilder[]){
+            StringBuilder mostrar[]=(StringBuilder[])objeto;
+            System.out.println(mostrar[0].toString());
+            System.out.println(mostrar[1].toString());
+        }
+        else{
+            StringBuilder mostrar=(StringBuilder)objeto;
+
+            if(mostrar.toString().equals("salir") || 
+                    mostrar.toString().equals("Opcion invalida") ||
+                    mostrar.toString().equals("Regresando al menu")){
+                
+                System.out.println(mostrar.toString());
+                new Scanner(System.in).nextLine();
+                return;
+            }
+
+            else{
+                System.out.println(mostrar);
+                DataOutputStream oos=new DataOutputStream(socket.getOutputStream());
+                oos.writeInt(new Scanner(System.in).nextInt());
+                oos.flush();
+
+                borradoServidor(socket,ois);
+            }
         }
         
     }
     
     public void listar(File directorio, String prefijo) {
         if (directorio.isDirectory()) {
+            
+            
             System.out.println(prefijo + "└───" + directorio.getName());
             File[] archivos = directorio.listFiles();
             if (archivos != null) {
@@ -140,8 +194,8 @@ public class Cliente {
         
         System.out.println("\nSe encuentra en: "+carpeta.getName()+"\n");
         
-        System.out.print("\nQuiere eliminar algun archivo o carpeta de este directorio [s/n]:");
-        if(new Scanner(System.in).nextLine().equals("s")){
+        System.out.print("\nQuiere eliminar algun archivo o carpeta de este directorio \n1-. Si  2-. No: \n");
+        if(verificarNumero(2)==1){
             for(int i=0;i<lista.length;i++){
                 System.out.println((i+1)+"-. "+lista[i].getName()+permisos(lista[i]));
             }
@@ -149,13 +203,13 @@ public class Cliente {
             System.out.print("\nIngrese numero del archivo o carpeta que desea eliminar: ");
             int t=verificarNumero(lista.length);
             if(t!=0){
-                System.out.print("\nSeguro quiere eliminar "+lista[t-1]+" [s/n]:");
-                if(new Scanner(System.in).nextLine().equals("s")){
+                System.out.print("\nSeguro quiere eliminar "+lista[t-1]+" \n1-. Si  2-. No: \n");
+                if(verificarNumero(2)==1){
                     if(lista[t-1].isDirectory()){
                         eliminarDirectorio(lista[t-1]);
                     }
                     else{
-                        if(lista[0].canWrite()){
+                        if(lista[t-1].canWrite()){
                             eliminarArchivo(lista[t-1]);
                         }
                         else{
@@ -172,11 +226,11 @@ public class Cliente {
         }
         /////Entrar a directorio
         else{
-            System.out.print("\nQuiere entrar a un directorio [s/n]:");
+            System.out.print("\nQuiere entrar a un directorio \n1-. Si  2-. No: \n");
             
             ArrayList<File> directorios=new ArrayList();
             
-            if(new Scanner(System.in).nextLine().equals("s")){
+            if(verificarNumero(2)==1){
                 int j=0;
                 for (File lista1 : lista) {
                     if (lista1.isDirectory()) {
@@ -185,12 +239,14 @@ public class Cliente {
                         System.out.println(j+"-. " + lista1.getName());
                     }
                 }
-                
-                System.out.print("\nIngrese numero del directorio que desea ingresar: ");
-                int t=verificarNumero(j);
-                if(t!=0)
-                    borradoOp(directorios.get(t-1));
-                
+                if(j!=0){
+                    System.out.print("\nIngrese numero del directorio que desea ingresar: ");
+                    int t=verificarNumero(j);
+                    if(t!=0)
+                        borradoOp(directorios.get(t-1));
+                }else{
+                    System.out.println("No hay directorios");
+                }
             }
             //////Salir
             else{
@@ -229,11 +285,10 @@ public class Cliente {
         }
         
         if (directorio.delete()) {
-            System.out.println("Directorio eliminado: " + directorio.getAbsolutePath());
+            System.out.println("Directorio eliminado: " + directorio.getName());
         } else {
-            System.out.println("No se pudo eliminar el directorio: " + directorio.getAbsolutePath());
+            System.out.println("No se pudo eliminar el directorio: " + directorio.getName());
         }
-        new Scanner(System.in).nextLine();
     }
 
     static String permisos(File file){
